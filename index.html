@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Clinic Queue Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img">
+            <path d="M12 3l7 3v5c0 4.4-2.8 8.5-7 10-4.2-1.5-7-5.6-7-10V6l7-3z"/>
+            <path d="M12 7v8M8 11h8"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Local clinic operations</p>
+          <h1>Smart Clinic Queue</h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" id="notifyButton" title="Enable browser notifications" aria-label="Enable browser notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/>
+            <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+          </svg>
+        </button>
+        <button class="primary-action" id="seedButton">Load sample day</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="patient-panel" aria-labelledby="checkin-title">
+        <div class="section-heading">
+          <p class="eyebrow">Patient check-in</p>
+          <h2 id="checkin-title">Join the queue before arriving</h2>
+        </div>
+
+        <form id="checkinForm" class="checkin-form">
+          <label>
+            Patient name
+            <input id="patientName" type="text" placeholder="Example: Priya Raman" autocomplete="name" required>
+          </label>
+          <label>
+            Mobile number
+            <input id="patientPhone" type="tel" placeholder="10 digit number" inputmode="numeric" required>
+          </label>
+          <label>
+            Visit reason
+            <select id="visitReason" required>
+              <option value="General consultation">General consultation</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Vaccination">Vaccination</option>
+              <option value="Lab report review">Lab report review</option>
+              <option value="Emergency symptoms">Emergency symptoms</option>
+            </select>
+          </label>
+          <label>
+            Symptoms / notes
+            <textarea id="patientNotes" rows="3" placeholder="Optional notes for the front desk"></textarea>
+          </label>
+          <div class="form-row">
+            <label class="checkbox-label">
+              <input id="needsSms" type="checkbox" checked>
+              SMS reminder
+            </label>
+            <label class="checkbox-label">
+              <input id="isUrgent" type="checkbox">
+              Emergency priority
+            </label>
+          </div>
+          <button class="primary-action wide" type="submit">Check in now</button>
+        </form>
+
+        <div class="ticket" id="ticketCard" hidden>
+          <div>
+            <p class="eyebrow">Your live token</p>
+            <h3 id="ticketNumber">A-001</h3>
+          </div>
+          <div class="ticket-grid">
+            <span>Position</span>
+            <strong id="ticketPosition">1</strong>
+            <span>Estimated wait</span>
+            <strong id="ticketWait">10 min</strong>
+            <span>Status</span>
+            <strong id="ticketStatus">Waiting</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="staff-panel" aria-labelledby="staff-title">
+        <div class="section-heading">
+          <p class="eyebrow">Staff dashboard</p>
+          <h2 id="staff-title">Manage today&apos;s patient flow</h2>
+        </div>
+
+        <div class="staff-controls">
+          <label>
+            Doctor speed
+            <select id="speedSelect">
+              <option value="7">Fast - 7 min per patient</option>
+              <option value="10" selected>Normal - 10 min per patient</option>
+              <option value="15">Busy - 15 min per patient</option>
+            </select>
+          </label>
+          <button class="secondary-action" id="callNextButton">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"/>
+              <path d="M12 5l7 7-7 7"/>
+            </svg>
+            Call next
+          </button>
+          <button class="secondary-action danger" id="clearDoneButton">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"/>
+              <path d="M8 6V4h8v2"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+            </svg>
+            Clear completed
+          </button>
+        </div>
+
+        <div class="queue-board">
+          <div>
+            <div class="lane-heading">
+              <h3>Waiting queue</h3>
+              <span id="waitingCount">0 patients</span>
+            </div>
+            <div id="queueList" class="queue-list"></div>
+          </div>
+          <aside class="now-serving">
+            <p class="eyebrow">Now serving</p>
+            <div id="servingCard" class="empty-state">No patient is being served.</div>
+            <div class="daily-insights">
+              <h3>Daily stats</h3>
+              <div class="insight-row">
+                <span>Emergency cases</span>
+                <strong id="statUrgent">0</strong>
+              </div>
+              <div class="insight-row">
+                <span>SMS reminders</span>
+                <strong id="statSms">0</strong>
+              </div>
+              <div class="insight-row">
+                <span>Longest wait</span>
+                <strong id="statLongest">0 min</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="Clinic status">
+        <article>
+          <span class="stat-label">Waiting</span>
+          <strong id="statWaiting">0</strong>
+        </article>
+        <article>
+          <span class="stat-label">Serving now</span>
+          <strong id="statServing">None</strong>
+        </article>
+        <article>
+          <span class="stat-label">Avg wait</span>
+          <strong id="statAverage">0 min</strong>
+        </article>
+        <article>
+          <span class="stat-label">Completed</span>
+          <strong id="statCompleted">0</strong>
+        </article>
+      </section>
+
+      <section class="visual-band" aria-label="Queue flow illustration">
+        <div class="flow-visual">
+          <div class="flow-node active">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-8 0v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Check in</span>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-node">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>Live wait</span>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-node">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/>
+              <path d="M22 4L12 14.01l-3-3"/>
+            </svg>
+            <span>Consultation</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="script.js"></script>
+</body>
+</html>
